@@ -1,0 +1,896 @@
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <title>Towards Textless Multilingual Audio Question Answering (TM-AQA) System Using Audio-MAMBA</title>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+  
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+  
+      gtag('js', new Date());
+  
+      gtag('config', 'G-PYVRSFMDRL');
+  </script>
+    <meta property="og:title" content="Towards Textless Multilingual Audio Question Answering (TM-AQA) System Using Audio-MAMBA">
+  <meta property="og:type" content="article">
+  <!-- FIXME(shillingford): add final URL -->
+  <meta property="og:url" content="">
+  <!--meta property="og:image" content="images/vdtts_teaser.webp"-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+  <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300&family=Roboto:wght@300&display=swap"
+    rel="preload" as="style"> -->
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300&family=Roboto:wght@300&display=swap"
+    rel="stylesheet"> -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" -->
+    <!-- rel="stylesheet"> -->
+
+<!-- <link rel="stylesheet" href="./static/css/bulma.min.css"> -->
+<!-- <link rel="stylesheet" href="./static/css/bulma-carousel.min.css"> -->
+<!-- <link rel="stylesheet" href="./static/css/bulma-slider.min.css"> -->
+<link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+<!-- <link rel="stylesheet" href="./static/css/index.css"> -->
+<link rel="icon" href="./static/images/favicon.svg">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script defer src="./static/js/fontawesome.all.min.js"></script>
+<!-- <script src="./static/js/bulma-carousel.min.js"></script>
+<script src="./static/js/bulma-slider.min.js"></script> -->
+<!-- <script src="./static/js/index.js"></script> -->
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+
+
+
+
+
+<body>
+  <div class="main">
+
+    <h1>Towards Textless Multilingual Audio Question Answering (TM-AQA)
+      System Using Audio-MAMBA</h1>
+
+    <!-- <div class="authors">
+        <div class="google">Eliya Nachmani</div>
+        <div class="google">Alon Levkovitch</div>
+        <div class="google">Chulayuth Asawaroengchai</div>
+        <div class="deepmind">Yifan Ding</div>
+        <div class="deepmind">Heiga Zen</div>
+        <div class="google">Michelle Tadmor Ramanovich</div>
+        <div class="aff"><sup>1</sup>Google Research</div>
+        <div class="aff"><sup>2</sup>Google DeepMind</div>
+      </div> -->
+
+    <div class="fig-teaser">
+      <!-- TODO ADD TEASER IMG -->
+    </div>
+
+    <span class="link-block">
+      <a href="https://github.com/aquorio15/aqa"
+      style="text-align:center">
+        <span class="icon">
+            <i class="fab fa-github"></i>
+        </span>
+        <span>Code</span>
+        </a>
+    </span>
+
+    <div class="abs">
+      <p>
+        Audio Question Answering (AQA) is a complex task in Multi-Modal Learning, where a system interprets audio inputs
+        and associated questions to produce appropriate answers. Previous AQA research has primarily focused on
+        text-based queries, exploration into spoken questions in languages like English has been limited. Since speech
+        is a primary mode of communication, integrating spoken queries could significantly enhance AQA system
+        capabilities. To bridge this gap, this paper introduces a Spoken AQA system utilizing the Textless Multilingual
+        Audio Question Answering (TM-AQA) dataset. This dataset comprises 107,514 question-answer pairs in English,
+        Hindi, and Bengali, derived from 1991 environmental audio recordings corresponding to various environmental
+        scenes. The study establishes baseline performance metrics by evaluating several multimodal (MML) AQA frameworks
+        that employ diverse acoustic features and architectures. The experimental results demonstrate that the proposed
+        Audio-MAMBA (A-MAMBA) based MML framework, incorporating a Continuous Scanning Mechanism (CSM), surpasses
+        Transformer-based MML frameworks in performance and computational efficiency.
+    </div>
+
+
+
+    <h1>Scanning Technique</h1>
+    <div class="scroll-container">
+
+      <h3>Sweep Scan</h3>
+      <div class="fig-model">
+        <!-- <img src="images/sweep.png" alt="sweep-scan."> -->
+        <img src="images/sweep.png" alt="sweep-scan.">
+      </div>
+
+      <div class="scroll-container">
+        <h3>Continous scan</h3>
+        <div class="fig-model">
+          <!-- <img src="images/sweep.png" alt="sweep-scan."> -->
+          <img src="images/continous.png" alt="continous-scan.">
+        </div>
+        <p>
+          The two scanning methods in Mamba. (1) Sweep scanning method proposed in the original mamba architechture. (2)
+          Continous scanning method is the proposed scanning method in our paper.
+        </p>
+      </div>
+
+      <!-- <h3>Test Samples</h3>
+      <p>
+        <li><a href="#ConversationalSTE">Spanish-to-English (on Conversational dataset)</a>
+            
+        </li>
+        <li><a href="#ConversationalETS">English-to-Spanish (on Conversational dataset)</a>
+        </li>
+        <li><a href="#CommonVoice11SynthesizedSTE">Spanish-to-English (on CommonVoice11 Synthesized dataset)</a>
+        </li>
+        <li><a href="#CommonVoice11SynthesizedETS">English-to-Spanish (on CommonVoice11 Synthesized dataset)</a>
+        </li>
+        <li><a href="#CommonVoice11RealETS">Spanish-to-English (on CommonVoice11 dataset)</a>
+        </li>
+      </p> -->
+
+      <p>
+        This section show synthetic (generated by TTS) samples as well as spoken samples from the Test set. The audio
+        samples were randomly selected
+      </p>
+      <p>
+        The first audio column labeled <highlighted>Environmental Sounds</highlighted> plays the environmental sound.
+        The following column, <highlighted>Synthesized Speech</highlighted>, plays the synthesized audio translation.
+        The following column play <highlighted>Human Speech</highlighted> plays the speech by a speaker.
+      </p>
+      <a id="ConversationalSTE">
+        <h2>AQA sample-1</h2>
+      </a>
+      <div class="table-container">
+        <table class="sample-table" id="conversational-table">
+          <colgroup>
+            <col>
+          </colgroup>
+          <thead>
+            <tr>
+              <th colspan="1" class="header-blue">Environmental Sounds</th>
+              <th colspan="1">Synthesized Speech (English)</th>
+              <th colspan="1">Human Speech (English)</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/English_1.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Bengali_1.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>Are there waves?</td>
+              <td>Are there waves?</td>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/English_4.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/English_4.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>How many times does the water splash?</td>
+              <td>How many times does the water splash?</td>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/English_7.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/English_7.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>Is the area dry?</td>
+              <td>Is the area dry?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/English_10.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/English_10.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>Is the sound falling water?</td>
+              <td>Is the sound falling water?</td>
+            </tr>
+          </tbody>
+
+          </br>
+          <hr>
+          <colgroup>
+            <col>
+          </colgroup>
+          <thead>
+            <tr>
+              <th colspan="1">Environmental Sounds</th>
+              <th colspan="1">Synthesized Speech (Hindi)</th>
+              <th colspan="1">Human Speech (Hindi)</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Hindi_1.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Hindi_1.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>क्या वहाँ लहरें हैं?</td>
+              <td>क्या वहाँ लहरें हैं?</td>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Hindi_4.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Hindi_4.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>पानी कितनी बार छलकता है?</td>
+              <td>पानी कितनी बार छलकता है?</td>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Hindi_7.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Hindi_7.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>क्या यह क्षेत्र सूखा है?</td>
+              <td>क्या यह क्षेत्र सूखा है?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Hindi_10.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Hindi_10.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>क्या यह ध्वनि गिरते पानी की है?</td>
+              <td>क्या यह ध्वनि गिरते पानी की है?</td>
+            </tr>
+          </tbody>
+
+          </br>
+          <hr>
+          <colgroup>
+            <col>
+          </colgroup>
+          <thead>
+            <tr>
+              <th colspan="1">Environmental Sounds</th>
+              <th colspan="1">Synthesized Speech (Bengali)</th>
+              <th colspan="1">Human Speech (Bengali)</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Bengali_1.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/BN_1.mp3" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>এখানে কি জল আছে?</td>
+              <td>এখানে কি জল আছে ?</td>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Bengali_4.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/BN_2.mp3" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>কতবার পানি স্প্ল্যাশ করে?</td>
+              <td>কতবার পানি স্প্ল্যাশ করে?</td>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Bengali_7.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/BN_3.mp3" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>এলাটকে কি শুস্ক?</td>
+              <td>এলাটকে কি শুস্ক?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example1/river_mouth3.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/Bengali_10.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example1/BN_4.mp3" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of river flowing</td>
+              <td>শব্দটা কি জলের মতন?</td>
+              <td>শব্দটা কি জলের মতন?</td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+
+      <a id="ConversationalETS">
+        <h2>AQA sample-2</h2>
+      </a>
+      <div class="table-container">
+        <table class="sample-table" id="conversational-table">
+          <colgroup>
+            <col>
+          </colgroup>
+          <thead>
+            <tr>
+              <th colspan="1" class="header-blue">Environmental Sounds</th>
+              <th colspan="1">Synthesized Speech (English)</th>
+              <th colspan="1">Human Speech (English)</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example2/English_19.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example2/English_19.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of creaking wood</td>
+              <td>How many times does the wood make a sound?</td>
+              <td>How many times does the wood make a sound?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example2/English_22.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example2/English_22.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of creaking wood</td>
+              <td>Is a dog barking?</td>
+              <td>Is a dog barking?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example2/English_25.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example2/English_25.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of creaking wood</td>
+              <td>Is that the sound of wood?</td>
+              <td>Is that the sound of wood?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example2/English_28.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example2/English_28.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of creaking wood</td>
+              <td>Is the sample taking place inside a wood building?</td>
+              <td>Is the sample taking place inside a wood building?</td>
+            </tr>
+
+            <thead>
+              <tr>
+                <th colspan="1" class="header-blue">Environmental Sounds</th>
+                <th colspan="1">Synthesized Speech (Hindi)</th>
+                <th colspan="1">Human Speech (Hindi)</th>
+              </tr>
+            </thead>
+            <tbody>
+              </tr>
+              <tr class="audio">
+                <td><audio controls="">
+                    <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example2/Hindi_19.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example2/Hindi_19.wav" type="audio/wav">
+                </td>
+              </tr>
+              <tr class="transcript">
+                <td>Sound of creaking wood</td>
+                <td>लकड़ी कितनी बार आवाज़ करती है?</td>
+                <td>लकड़ी कितनी बार आवाज़ करती है?</td>
+              </tr>
+              </tr>
+              <tr class="audio">
+                <td><audio controls="">
+                    <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example2/Hindi_22.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example2/Hindi_22.wav" type="audio/wav">
+                </td>
+              </tr>
+              <tr class="transcript">
+                <td>Sound of creaking wood</td>
+                <td>क्या कुत्ता भौंक रहा है?</td>
+                <td>क्या कुत्ता भौंक रहा है?</td>
+              </tr>
+              </tr>
+              <tr class="audio">
+                <td><audio controls="">
+                    <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example2/Hindi_25.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example2/Hindi_25.wav" type="audio/wav">
+                </td>
+              </tr>
+              <tr class="transcript">
+                <td>Sound of creaking wood</td>
+                <td>क्या यह लकड़ी की आवाज़ है?</td>
+                <td>क्या यह लकड़ी की आवाज़ है?</td>
+              </tr>
+              </tr>
+              <tr class="audio">
+                <td><audio controls="">
+                    <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example2/Hindi_28.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example2/Hindi_28.wav" type="audio/wav">
+                </td>
+              </tr>
+              <tr class="transcript">
+                <td>Sound of creaking wood</td>
+                <td>क्या नमूना लकड़ी की इमारत के अंदर लिया जा रहा है?</td>
+                <td>क्या नमूना लकड़ी की इमारत के अंदर लिया जा रहा है?</td>
+              </tr>
+
+              <thead>
+                <tr>
+                  <th colspan="1" class="header-blue">Environmental Sounds</th>
+                  <th colspan="1">Synthesized Speech (Bengali)</th>
+                  <th colspan="1">Human Speech (Bengali)</th>
+                </tr>
+              </thead>
+              <tbody>
+                </tr>
+                <tr class="audio">
+                  <td><audio controls="">
+                      <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example2/Bengali_19.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example2/BN_5.mp3" type="audio/wav">
+                  </td>
+                </tr>
+                <tr class="transcript">
+                  <td>Sound of creaking wood</td>
+                  <td>কাঠ কতবার আওয়াজ করে?</td>
+                  <td>কাঠ কতবার আওয়াজ করে?</td>
+                </tr>
+                </tr>
+                <tr class="audio">
+                  <td><audio controls="">
+                      <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example2/Bengali_22.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example2/BN_6.mp3" type="audio/wav">
+                  </td>
+                </tr>
+                <tr class="transcript">
+                  <td>Sound of creaking wood</td>
+                  <td>কুকুর কি ঘেউ ঘেউ করছে?</td>
+                  <td>কুকুর কি ঘেউ ঘেউ করছে?</td>
+                </tr>
+                </tr>
+                <tr class="audio">
+                  <td><audio controls="">
+                      <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example2/Bengali_25.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example2/BN_7.mp3" type="audio/wav">
+                  </td>
+                </tr>
+                <tr class="transcript">
+                  <td>Sound of creaking wood</td>
+                  <td>এটা কি কাঠের শব্দ?</td>
+                  <td>এটা কি কাঠের শব্দ?</td>
+                </tr>
+                </tr>
+                <tr class="audio">
+                  <td><audio controls="">
+                      <source src="examples/example2/Creaking pier.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example2/Bengali_28.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example2/BN_8.mp3" type="audio/wav">
+                  </td>
+                </tr>
+                <tr class="transcript">
+                  <td>Sound of creaking wood</td>
+                  <td>নমুনা কি কাটের ভবনের ভিতরে অনুষ্ঠিত হচ্ছে?</td>
+                  <td>নমুনা কি কাটের ভবনের ভিতরে অনুষ্ঠিত হচ্ছে?</td>
+                </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <a id="CommonVoice11SynthesizedSTE">
+        <h2>AQA sample-3</h2>
+      </a>
+      <div class="table-container">
+        <table class="sample-table" id="conversational-table">
+          <colgroup>
+            <col>
+          </colgroup>
+          <thead>
+            <tr>
+              <th colspan="1" class="header-blue">Environmental Sounds</th>
+              <th colspan="1">Synthesized Speech (English)</th>
+              <th colspan="1">Human Speech (English)</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example3/English_37.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example3/English_37.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of mug in the sink</td>
+              <td>Is liquid present?</td>
+              <td>Is liquid present?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example3/English_40.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example3/English_40.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of mug in the sink</td>
+              <td>Is something solid falling?</td>
+              <td>Is something solid falling?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example3/English_43.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example3/English_43.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of mug in the sink</td>
+              <td>Is there a lighting strike?</td>
+              <td>Is there a lighting strike?</td>
+            </tr>
+            </tr>
+            <tr class="audio">
+              <td><audio controls="">
+                  <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example3/English_46.wav" type="audio/wav">
+              </td>
+              <td><audio controls="">
+                  <source src="examples/example3/English_46.wav" type="audio/wav">
+              </td>
+            </tr>
+            <tr class="transcript">
+              <td>Sound of mug in the sink</td>
+              <td>Is water being poured?</td>
+              <td>Is water being poured?</td>
+            </tr>
+
+            <thead>
+              <tr>
+                <th colspan="1" class="header-blue">Environmental Sounds</th>
+                <th colspan="1">Synthesized Speech (Hindi)</th>
+                <th colspan="1">Human Speech (Hindi)</th>
+              </tr>
+            </thead>
+            <tbody>
+              </tr>
+              <tr class="audio">
+                <td><audio controls="">
+                    <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example3/Hindi_37.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example3/Hindi_37.wav" type="audio/wav">
+                </td>
+              </tr>
+              <tr class="transcript">
+                <td>Sound of mug in the sink</td>
+                <td>क्या वे रेडियो सुन रहे हैं?</td>
+                <td>क्या वे रेडियो सुन रहे हैं?</td>
+              </tr>
+              </tr>
+              <tr class="audio">
+                <td><audio controls="">
+                    <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example3/Hindi_40.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example3/Hindi_40.wav" type="audio/wav">
+                </td>
+              </tr>
+              <tr class="transcript">
+                <td>Sound of mug in the sink</td>
+                <td>क्या कोई वस्तु गिराई जा रही है?</td>
+                <td>क्या कोई वस्तु गिराई जा रही है?</td>
+              </tr>
+              </tr>
+              <tr class="audio">
+                <td><audio controls="">
+                    <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example3/Hindi_43.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example3/Hindi_43.wav" type="audio/wav">
+                </td>
+              </tr>
+              <tr class="transcript">
+                <td>Sound of mug in the sink</td>
+                <td>क्या कोई काम कर रहा है?</td>
+                <td>क्या कोई काम कर रहा है?</td>
+              </tr>
+              </tr>
+              <tr class="audio">
+                <td><audio controls="">
+                    <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example3/Hindi_46.wav" type="audio/wav">
+                </td>
+                <td><audio controls="">
+                    <source src="examples/example3/Hindi_46.wav" type="audio/wav">
+                </td>
+              </tr>
+              <tr class="transcript">
+                <td>Sound of mug in the sink</td>
+                <td>क्या वहां कोई फोर्कलिफ्ट मौजूद है?</td>
+                <td>क्या वहां कोई फोर्कलिफ्ट मौजूद है?</td>
+              </tr>
+            
+              <thead>
+                <tr>
+                  <th colspan="1" class="header-blue">Environmental Sounds</th>
+                  <th colspan="1">Synthesized Speech (Bengali)</th>
+                  <th colspan="1">Human Speech (Bengali)</th>
+                </tr>
+              </thead>
+    
+              <tbody>
+                </tr>
+                <tr class="audio">
+                  <td><audio controls="">
+                      <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example3/Bengali_37.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example3/BN_9.mp3" type="audio/wav">
+                  </td>
+                </tr>
+                <tr class="transcript">
+                  <td>Sound of mug in the sink</td>
+                  <td>তড়ল কি উপস্হিত আছে?</td>
+                  <td>তড়ল কি উপস্হিত আছে?</td>
+                </tr>
+                </tr>
+                <tr class="audio">
+                  <td><audio controls="">
+                      <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example3/Bengali_40.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example3/BN_10.mp3" type="audio/wav">
+                  </td>
+                </tr>
+                <tr class="transcript">
+                  <td>Sound of mug in the sink</td>
+                  <td>কিছু কঠিন কি পরে যাচ্ছে?</td>
+                  <td>কিছু কঠিন কি পরে যাচ্ছে?</td>
+                </tr>
+                </tr>
+                <tr class="audio">
+                  <td><audio controls="">
+                      <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example3/Bengali_43.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example3/BN_11.mp3" type="audio/wav">
+                  </td>
+                </tr>
+                <tr class="transcript">
+                  <td>Sound of mug in the sink</td>
+                  <td>লাইটনিং স্ট্রাইক আছে?</td>
+                  <td>লাইটনিং স্ট্রাইক আছে?</td>
+                </tr>
+                </tr>
+                <tr class="audio">
+                  <td><audio controls="">
+                      <source src="examples/example3/Mug in sink.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example3/Bengali_46.wav" type="audio/wav">
+                  </td>
+                  <td><audio controls="">
+                      <source src="examples/example3/BN_12.mp3" type="audio/wav">
+                  </td>
+                </tr>
+                <tr class="transcript">
+                  <td>Sound of mug in the sink</td>
+                  <td>পানি ফেলে দিচ্ছে?</td>
+                  <td>পানি ফেলে দিচ্ছে?</td>
+                </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div style="text-align:center">
+        <h3>Additional results table:</h3>
+        <object type="application/pdf" data="images/removed.pdf" width="600" height="800">
+        </object>
+      </div>
+
+</body>
+
+</html>
